@@ -5,18 +5,17 @@ Experimenting with the runtime of various algorithms implemented as functions.
 Details include time complexity (in ticks = 1 sec/Freq) and best cases for algorithm usage.
 
 1. Selection Sort   (18,000')
-2. Insertion Sort   (70')
+2. Insertion Sort   (550')
 3. Bubble Sort      (38,000')
 4. Merge Sort       (8,000')
-5. Quick Sort       (16,000')
-6. Heap Sort ?      (')
+5. Quick Sort       (3,500')
+6. Heap Sort        (3,500')
 ...
-7. Dictionary
-8. Hash Map ?
-9. Linked List ?
+7. Dictionary       (30') [vs. 40' via Linear search]
+8. Linked List      ?????
 
 Unsorted array supplied as text file called 'InputArray.txt' with 1,000 unsorted numbers.
- */
+*/
 
 using System;
 using System.IO;
@@ -93,7 +92,45 @@ namespace ConsoleApp1
                         Console.WriteLine("\nAlgorithm execution time is: " + stopwatch.ElapsedTicks + " ticks");
                         userInput = null;
                         break;
+                    case "6":
+                        stopwatch.Start();
+                        sortedArray = HeapSort(arrayForSorting);
+                        stopwatch.Stop();
+                        foreach (float line in sortedArray)
+                            Console.WriteLine(line);
+                        Console.WriteLine("\nAlgorithm execution time is: " + stopwatch.ElapsedTicks + " ticks");
+                        userInput = null;
+                        break;
+                    case "7":
+                        sortedArray = InsertionSort(arrayForSorting);
+                        float searchedForFloatVal = -1;
+                        stopwatch.Start();
+                        foreach (float value in sortedArray)                            // Linear Search Algorithm for sorted array where value being searched for is near the end
+                        {
+                            if (value == 24948544214908)
+                            {
+                                searchedForFloatVal = value;
+                                break;
+                            }
+                        }
+                        stopwatch.Stop();
+                        Console.WriteLine("\nLinear search execution time is: " + stopwatch.ElapsedTicks + " ticks, and search value is: " + searchedForFloatVal);
+
+                        Dictionary<int, float> sortedDict = CreateDictionary(sortedArray);
+                        searchedForFloatVal = -1;
+                        stopwatch.Restart();
+                        if (sortedDict.ContainsKey(953))
+                            searchedForFloatVal = sortedDict[953];
+                        stopwatch.Stop();
+                        Console.WriteLine("\nDictionary search execution time is: " + stopwatch.ElapsedTicks + " ticks, and search value is: " + searchedForFloatVal);
+                        userInput = null;
+                        break;
+                    case "8":
+                        userInput = null;
+                        break;
                     default:
+                        arrayForSorting = Array.ConvertAll(File.ReadAllLines(dirInputArray), float.Parse);
+                        listForSorting = Enumerable.ToList(arrayForSorting);
                         Console.WriteLine("\n-------------------------------------------------------------------------------------------------------------\n");
                         Console.Write("1.Selection Sort \n\n  Pick what Algorithm to Run by Entering Number (e.g. '2'). Enter '0' to terminate application: ");
                         stopwatch = new Stopwatch();
@@ -107,7 +144,7 @@ namespace ConsoleApp1
 
         // NOMENCLATURE: SELECT next smallest Val's index in unsorted portion of Array when compared to current Val in sorted portion.
         // RUNTIME:      O(n^2)
-        // USAGE:        No auxiliary memory usage but slow for complex inputs. Easy to code and CAN be faster for simpler inputs.
+        // USAGE:        No auxiliary memory usage but slow for larger inputs. Easy to code, and COULD be faster for simpler inputs.
         // TEST:         18,000 ticks
         private static float[] SelectionSort(float[] arrayForSorting)
         {
@@ -129,8 +166,8 @@ namespace ConsoleApp1
 
         // NOMENCLATURE: INSERT current Val at index of those Vals to the left of Curr Ptr until Left Val is NOT < Curr Val.
         // RUNTIME:      O(n^2)
-        // USAGE:        No auxiliary memory usage but slow for complex inputs. Faster than Selection Sort.
-        // TEST:         70 ticks
+        // USAGE:        No auxiliary memory usage but CAN slow for complex inputs. Generally very fast with optimized array that is somewhat already sorted.
+        // TEST:         550 ticks
         private static float[] InsertionSort(float[] arrayForSorting)
         {
             for (int i = 1; i < arrayForSorting.Length; i++)
@@ -172,7 +209,7 @@ namespace ConsoleApp1
 
         // NOMENCLATURE: MERGE two smaller lists recursively, but sort the smaller ones first in a divide-and-conquer manner.
         // RUNTIME:      O(nlogn)
-        // USAGE:        Uses auxiliary memory but faster for complex inputs. O(nlogn) runtime for n-elements * numb of levels in Binary Tree i.e. Solve for (y) in 2^y = n.
+        // USAGE:        Uses auxiliary memory but faster for complex inputs (compared to INSERTION SORT for average and worst cases). O(nlogn) runtime for n-elements for (y) in 2^y = n.
         // TEST:         8,000 ticks
         private static List<float> MergeSort(List<float> listForSorting)
         {
@@ -220,8 +257,8 @@ namespace ConsoleApp1
 
         // NOMENCLATURE: QUICK refers to this highly efficient sorting algorithm, but speed is dependent on first pivot point chosen.
         // RUNTIME:      O(nlogn)
-        // USAGE:        No auxiliary memory usage and faster for complex inputs. O(nlogn) runtime for n-elements * numb of levels in Binary Tree i.e. Solve for (y) in 2^y = n.
-        // TEST:         16,000 ticks
+        // USAGE:        No auxiliary memory usage and fastest for complex inputs. O(nlogn) runtime for n-elements * numb of levels in Binary Tree i.e. Solve for (y) in 2^y = n.
+        // TEST:         3,500 ticks
         private static float[] QuickSort(float[] arrayForSorting, int leftIndex, int rightIndex)
         {
             if (leftIndex < rightIndex)
@@ -248,11 +285,70 @@ namespace ConsoleApp1
                     leftWall++;
                 }
             }
-            float newPivot = pivotVal;
-            pivotVal = arrayForSorting[leftWall];
-            arrayForSorting[leftWall] = newPivot;
+            arrayForSorting[leftWall] = pivotVal;
 
             return leftWall;
+        }
+
+        // NOMENCLATURE: HEAP refers to the binary MAX heap structure, and iteratively finding the highest value for re-placement at the end.
+        // RUNTIME:      O(nlogn)
+        // USAGE:        No auxiliary memory usage and fastest for complex inputs. O(nlogn) runtime for n-elements * numb of levels in Binary Tree i.e. Solve for (y) in 2^y = n.
+        // TEST:         3,500 ticks
+        private static int heapSize;
+        private static float[] HeapSort(float[] arrayForSorting)
+        {
+            Helper_BuildMaxHeap(arrayForSorting);
+            for (int i = arrayForSorting.Length - 1; i >= 0; i--)
+            {
+                float temp = arrayForSorting[0];
+                arrayForSorting[0] = arrayForSorting[i];
+                arrayForSorting[i] = temp;
+                heapSize--;
+                Helper_Heapify(arrayForSorting, 0);
+            }
+
+            return arrayForSorting;
+        }
+        private static void Helper_BuildMaxHeap(float[] arrayForSorting)
+        {
+            heapSize = arrayForSorting.Length - 1;
+            for (int index = (heapSize / 2); index >= 0; index--)
+                Helper_Heapify(arrayForSorting, index);
+        }
+        private static void Helper_Heapify(float[] arrayForSorting, int index)
+        {
+            int maxValuIndex = index;
+            int leftIndex = 2 * index + 1;
+            int rightIndex = 2 * index + 2;
+
+            if (leftIndex <= heapSize && arrayForSorting[leftIndex] > arrayForSorting[index])
+                maxValuIndex = leftIndex;
+
+            if (rightIndex <= heapSize && arrayForSorting[rightIndex] > arrayForSorting[maxValuIndex])
+                maxValuIndex = rightIndex;
+
+            if (maxValuIndex != index)
+            {
+                float temp = arrayForSorting[index];
+                arrayForSorting[index] = arrayForSorting[maxValuIndex];
+                arrayForSorting[maxValuIndex] = temp;
+                Helper_Heapify(arrayForSorting, maxValuIndex);
+            }
+        }
+
+        /*............................................................................................*/
+
+        // NOMENCLATURE: Dictionary<Key, Value> e.g. [944, 24948544214908]
+        // USAGE:        In the case of searching for a value (via linear or binary means), checking Dict.Contains(key) is faster than making comparisons on values.
+        // TEST:         30 ticks (instead of 40' in Linear Search)
+        private static Dictionary<int, float> CreateDictionary(float[] sortedArray)
+        {
+            Dictionary<int, float> sortedDict = new Dictionary<int, float>();
+
+            for (int i = 0; i < sortedArray.Length; i++)
+                sortedDict.Add(i + 1, sortedArray[i]);
+
+            return sortedDict;
         }
     }
 }
